@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#display { font-size: 80pt; text-align: center; margin-top: 0; margin-bottom: 0; }
+h2 { font-size: 40pt; text-align: center ;}
+.velocity { font-size: 20pt; text-align: center; margin-top: 0;}
+</style>
+</head>
+<body>
+<h2>다음 노트</h2>
+<p id="display">ld</p>
+<p class="velocity">타건 강도<br /><span id="velocity">-</span></p>
+<script>
+var real = new Float32Array(9);
+var imag = new Float32Array(9);
+var ac = new AudioContext();
+var osc = ac.createOscillator();
+// c# : 73, 61
+// d# : 75, 64
+// f# : 78, 66
+// g# : 80, 68
+// bflat : 71
+var song = [
+  75, 76, 78, 83, 75, 76, 78, 83, 85, 87, 85, 82, 83,
+  78, 75, 76, 78, 83, 85, 82, 83, 85, 88, 87, 88, 85,
+
+  78, 80, 75, 75, 71, 74, 73, 71, 71, 73,
+  74, 74, 73, 71, 73, 75, 78, 80, 75, 78, 73, 75, 71, 73, 71,
+  75, 78, 80, 75, 78, 73, 75, 71, 74, 75, 74, 73, 71, 73,
+  74, 71, 73, 75, 78, 73, 75, 73, 71, 73, 71, 73,
+
+  78, 80, 75, 75, 71, 74, 73, 71, 71, 73,
+  74, 74, 73, 71, 73, 75, 78, 80, 75, 78, 73, 75, 71, 73, 71,
+  75, 78, 80, 75, 78, 73, 75, 71, 74, 75, 74, 73, 71, 73,
+  74, 71, 73, 75, 78, 73, 75, 73, 71, 73, 71, 73,
+
+  71, 66, 68, 71, 66, 68, 71, 73, 75, 71, 76, 75, 76, 78,
+  71, 71, 66, 68, 71, 66, 76, 75, 73, 71, 66, 64, 65, 66,
+  71, 66, 68, 71, 66, 68, 71, 71, 73, 75, 71, 66, 68, 66,
+  71, 71, 70, 71, 66, 68, 71, 76, 75, 76, 78, 71, 70,
+
+  71, 66, 68, 71, 66, 68, 71, 73, 75, 71, 76, 75, 76, 78,
+  71, 71, 66, 68, 71, 66, 76, 75, 73, 71, 66, 64, 65, 66,
+  71, 66, 68, 71, 66, 68, 71, 71, 73, 75, 71, 66, 68, 66,
+  71, 71, 70, 71, 66, 68, 71, 76, 75, 76, 78, 71, 73,
+
+  78, 80, 75, 75, 71, 74, 73, 71, 71, 73,
+  74, 74, 73, 71, 73, 75, 78, 80, 75, 78, 73, 75, 71, 73, 71,
+  75, 78, 80, 75, 78, 73, 75, 71, 74, 75, 74, 73, 71, 73,
+  78, 80, 75, 75, 71, 74, 73, 71, 83
+  ];
+
+real[0] = 0;
+imag[0] = 0;
+real[1] = 0.7;
+imag[1] = 0;
+real[2] = 0.2;
+imag[2] = 0;
+real[3] = 0.05;
+imag[3] = 0;
+real[4] = 0.05;
+imag[4] = 0;
+real[5] = 0.05;
+imag[5] = 0;
+real[6] = 0.05;
+imag[6] = 0;
+real[7] = 0.05;
+imag[7] = 0;
+real[8] = 0.01;
+imag[8] = 0;
+/*
+for (var i = 2; i <= 8; i++) {
+  real[i] = imag[i] = 0.1;
+}*/
+var wave = ac.createPeriodicWave(real, imag);
+
+var mainGain = ac.createGain();
+osc.connect(mainGain);
+mainGain.connect(ac.destination);
+osc.setPeriodicWave(wave);
+mainGain.gain.value = 1;
+osc.type = 'square';
+osc.start();
+
+var ac2 = new AudioContext();
+var real2 = new Float32Array(6);
+var imag2 = new Float32Array(6);
+real2[0] = 0;
+imag2[0] = 0;
+real2[1] = 0.5;
+imag2[1] = 0;
+real2[2] = 0.2;
+imag2[2] = 0;
+real2[3] = 0.05;
+imag2[3] = 0;
+real2[4] = 0.1;
+imag2[4] = 0;
+real2[5] = 0.1;
+imag2[5] = 0;
+var wave2 = ac2.createPeriodicWave(real2, imag2);
+var osc2 = ac2.createOscillator();
+osc2.setPeriodicWave(wave2);
+osc2.type = 'sine';
+var gain = ac2.createGain();
+osc2.connect(gain);
+gain.connect(ac2.destination);
+gain.gain.value = 2;
+osc2.start();
+
+var ac3;
+
+var setFreq = function (value, velocity) {
+  osc2.frequency.value = osc.frequency.value = value;
+  if (velocity) {
+    var p = 22;
+    var k = Math.pow(p, velocity / p) / p;
+    printVelocity(k);
+    mainGain.gain.value = k;
+  }
+  if (!value)
+    return;
+
+  if (ac3)
+  {
+    ac3.close();
+  }
+  ac3 = new AudioContext();
+  var cat = 5;
+  var real3 = new Float32Array(cat);
+  var imag3 = new Float32Array(cat);
+  real3[0] = 0;
+  imag3[0] = 0;
+  for (var i = 1; i < cat; i++) {
+    real3[i] = 0.1;
+    imag3[i] = 0;
+  }
+
+  var wave3 = ac3.createPeriodicWave(real2, imag2);
+  var osc3 = ac3.createOscillator();
+  osc3.setPeriodicWave(wave3);
+  osc3.type = 'sine';
+  var gain = ac3.createGain();
+  osc3.connect(gain);
+  gain.connect(ac3.destination);
+  gain.gain.value = 45;
+  osc3.start();
+  osc3.frequency.value = 5;
+  osc3.stop(0.01);
+};
+
+setFreq(0);
+
+var disp = document.getElementById('display');
+function print(note, oct)
+{
+  if (oct >= 0 && oct < 100) {
+    disp.innerHTML = note + ' ' + oct;
+  } else {
+    disp.innerHTML = '끝';
+  }
+}
+var velocity = document.getElementById('velocity');
+function printVelocity(val) {
+  velocity.innerHTML = val.toFixed(4);
+}
+
+var notes = 'C C#D D#E F F#G G#A A#B ';
+
+function see() {
+  var note = song[0];
+      var octave = Math.floor(note / 12) - 1;
+    var text = notes.substring((note % 12) * 2, (note % 12) * 2 + 2);
+    print(text, octave);
+}
+see();
+
+var open = 0;
+
+var vdb = '1QAZ2WSX3EDC4RFV5TGB6YHN7UJM8IK,9OL.0P;/-[\'=]\\';
+
+window.addEventListener('keydown',function(e) {
+  if (!!e.repeat === true) {
+    return;
+  }
+  var velocity = vdb.indexOf(String.fromCharCode(e.keyCode));
+  if (velocity < 0) {
+    velocity = vdb.length / 2;
+  }
+  open++;
+  if (song.length > 0) {
+    var note = song[0];
+    var freq = 220 * Math.pow(2, (note - 49) / 12.0);
+    song.shift();
+    see();
+    setFreq(freq, velocity);
+  } else {
+    setFreq(0);
+  }
+},true);
+
+window.addEventListener('keyup', function (e) {
+  if (--open > 0) {
+    return;
+  }
+  setFreq(0);
+}, true);
+
+</script>
+</body>
+</html>
